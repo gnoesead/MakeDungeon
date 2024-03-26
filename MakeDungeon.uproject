@@ -9,11 +9,17 @@
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
-				"Engine"
+				"Engine",
+				"GameplayAbilities",
+				"UMG"
 			]
 		}
 	],
 	"Plugins": [
+		{
+			"Name": "GameplayAbilities",
+			"Enabled": true
+		},
 		{
 			"Name": "ModelingToolsEditorMode",
 			"Enabled": true,
