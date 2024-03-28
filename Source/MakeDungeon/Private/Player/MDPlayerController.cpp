@@ -7,7 +7,8 @@ void AMDPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FInputModeUIOnly GameInputMode;
-	SetInputMode(GameInputMode);
-	SetShowMouseCursor(true);
+	//SetShowMouseCursor(true);
+
+	//FInputModeGameOnly GameOnlyInputMode;
+	//SetInputMode(GameOnlyInputMode);
 }

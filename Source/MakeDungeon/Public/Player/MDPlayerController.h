@@ -16,4 +16,5 @@ class MAKEDUNGEON_API AMDPlayerController : public APlayerController
 	
 public:
 	virtual void BeginPlay() override;
+
 };

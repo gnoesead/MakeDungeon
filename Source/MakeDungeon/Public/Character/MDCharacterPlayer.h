@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "MDCharacterBase.h"
+#include "InputActionValue.h"
 #include "MDCharacterPlayer.generated.h"
 
 /**
@@ -22,10 +23,13 @@ public:
 
 // Character Control Section
 protected:
-	void SetCharacterControlData(const class UMDCharacterControlData* CharacterControlData);
+	void SetCharacterControl();
+	virtual void SetCharacterControlData(const class UMDCharacterControlData* CharacterControlData) override;
 
-	UPROPERTY(EditAnywhere, Category = "CharacterControl", Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UMDCharacterControlData> CharacterControl;
+	void SetupGASInputComponent();
+	void GASInputPressed(int32 InputId);
+
+	
 
 // Camera Section
 protected:
@@ -38,9 +42,17 @@ protected:
 // Input Section
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> MouseMoveAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> KeyboardMoveAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> JumpAction;
 
+	void KeyboardMove(const FInputActionValue& Value);
+	
 protected:
 	UPROPERTY(EditAnywhere, Category = "GAS")
-	TMap<int32, TSubclassOf<class UGameplayAbility>> PlayerInputAbilities;
+	TMap<int32, TSubclassOf<class UGameplayAbility>> InputAbilities;
 };

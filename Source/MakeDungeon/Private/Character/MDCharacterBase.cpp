@@ -4,6 +4,7 @@
 #include "Character/MDCharacterBase.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Data/MDCharacterControlData.h"
 
 // Sets default values
 AMDCharacterBase::AMDCharacterBase()
@@ -45,11 +46,23 @@ AMDCharacterBase::AMDCharacterBase()
 	{
 		GetMesh()->SetAnimInstanceClass(AnimInstanceClassRef.Class);
 	}
+
+	static ConstructorHelpers::FObjectFinder<UMDCharacterControlData> CharacterControlDataRef(TEXT("/Script/MakeDungeon.MDCharacterControlData'/Game/MakeDungeon/Data/MDC_Player.MDC_Player'"));
+	if (CharacterControlDataRef.Object)
+	{
+		CharacterControl = CharacterControlDataRef.Object;
+	}
+
+
 }
 
 UAbilitySystemComponent* AMDCharacterBase::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
+}
+
+void AMDCharacterBase::SetCharacterControlData(const UMDCharacterControlData* CharacterControlData)
+{
 }
 
 // Called when the game starts or when spawned

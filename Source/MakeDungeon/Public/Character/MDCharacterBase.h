@@ -19,6 +19,11 @@ public:
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 protected:
+	virtual void SetCharacterControlData(const class UMDCharacterControlData* CharacterControlData);
+
+	UPROPERTY(EditAnywhere, Category = "CharacterControl", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UMDCharacterControlData> CharacterControl;
+
 	UPROPERTY(EditAnywhere, Category = "GAS")
 	TObjectPtr<class UAbilitySystemComponent> AbilitySystemComponent;
 
