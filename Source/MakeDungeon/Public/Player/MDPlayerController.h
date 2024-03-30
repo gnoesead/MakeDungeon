@@ -15,6 +15,30 @@ class MAKEDUNGEON_API AMDPlayerController : public APlayerController
 	GENERATED_BODY()
 	
 public:
+	AMDPlayerController();
+
 	virtual void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	float ShortPressThreshold;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	class UNiagaraSystem* FXCursor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	class UInputMappingContext* DefaultMappingContext;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> MouseMoveAction;
+protected:
+	virtual void SetupInputComponent() override;
+
+	void OnMouseMoveTriggered();
+	void OnMouseMoveReleased();
+
+private:
+	FVector CachedDestination;
+
+	float FollowTime;
 
 };

@@ -25,13 +25,12 @@ AMDCharacterPlayer::AMDCharacterPlayer()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
-
 	
-	static ConstructorHelpers::FObjectFinder<UInputAction> InputActionMouseMoveRef(TEXT("/Script/EnhancedInput.InputAction'/Game/MakeDungeon/Input/Actions/IA_SetDestination_Click.IA_SetDestination_Click'"));
+	/*static ConstructorHelpers::FObjectFinder<UInputAction> InputActionMouseMoveRef(TEXT("/Script/EnhancedInput.InputAction'/Game/MakeDungeon/Input/Actions/IA_SetDestination_Click.IA_SetDestination_Click'"));
 	if (nullptr != InputActionMouseMoveRef.Object)
 	{
 		MouseMoveAction = InputActionMouseMoveRef.Object;
-	}
+	}*/
 
 	static ConstructorHelpers::FObjectFinder<UInputAction> InputActionKeyboardMoveRef(TEXT("/Script/EnhancedInput.InputAction'/Game/MakeDungeon/Input/Actions/IA_KeyboardMove.IA_KeyboardMove'"));
 	if (nullptr != InputActionKeyboardMoveRef.Object)
@@ -59,7 +58,7 @@ void AMDCharacterPlayer::PossessedBy(AController* NewController)
 			MD_LOG(LogMD, Log, TEXT("%d, %s"), StartInputAbility.Key, *(StartInputAbility.Value)->GetAuthoredName());
 		}
 
-		SetupGASInputComponent();
+		//SetupGASInputComponent();
 
 		APlayerController* PlayerController = CastChecked<APlayerController>(NewController);
 		PlayerController->ConsoleCommand(TEXT("showdebug abilitysystem"));
@@ -76,7 +75,7 @@ void AMDCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	//EnhancedInputComponent->BindAction(MouseMoveAction, ETriggerEvent::Triggered, this, &AMDCharacterPlayer::MouseMove);
 	EnhancedInputComponent->BindAction(KeyboardMoveAction, ETriggerEvent::Triggered, this, &AMDCharacterPlayer::KeyboardMove);
 
-	SetupGASInputComponent();
+	//SetupGASInputComponent();
 }
 
 void AMDCharacterPlayer::BeginPlay()
@@ -90,7 +89,7 @@ void AMDCharacterPlayer::SetCharacterControl()
 {
 	SetCharacterControlData(CharacterControl);
 
-	APlayerController* PlayerController = CastChecked<APlayerController>(GetController());
+	/*APlayerController* PlayerController = CastChecked<APlayerController>(GetController());
 	if (UEnhancedInputLocalPlayerSubsystem* SubSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 	{
 		SubSystem->ClearAllMappings();
@@ -99,7 +98,7 @@ void AMDCharacterPlayer::SetCharacterControl()
 		{
 			SubSystem->AddMappingContext(NewMappingContext, 0);
 		}
-	}
+	}*/
 }
 
 void AMDCharacterPlayer::SetCharacterControlData(const UMDCharacterControlData* CharacterControlData)
@@ -120,9 +119,9 @@ void AMDCharacterPlayer::SetupGASInputComponent()
 	{
 		UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent);
 
-		EnhancedInputComponent->BindAction(MouseMoveAction, ETriggerEvent::Triggered, this, &AMDCharacterPlayer::GASInputPressed, 0);
-		EnhancedInputComponent->BindAction(MouseMoveAction, ETriggerEvent::Canceled, this, &AMDCharacterPlayer::GASInputReleased, 0);
-		EnhancedInputComponent->BindAction(MouseMoveAction, ETriggerEvent::Completed, this, &AMDCharacterPlayer::GASInputReleased, 0);
+		//EnhancedInputComponent->BindAction(MouseMoveAction, ETriggerEvent::Triggered, this, &AMDCharacterPlayer::GASInputPressed, 0);
+		//EnhancedInputComponent->BindAction(MouseMoveAction, ETriggerEvent::Canceled, this, &AMDCharacterPlayer::GASInputReleased, 0);
+		//EnhancedInputComponent->BindAction(MouseMoveAction, ETriggerEvent::Completed, this, &AMDCharacterPlayer::GASInputReleased, 0);
 		//EnhancedInputComponent->BindAction(KeyboardMoveAction, ETriggerEvent::Triggered, this, &AMDCharacterPlayer::KeyboardMove);
 
 		MD_LOG(LogMD, Log, TEXT("Begin"));
