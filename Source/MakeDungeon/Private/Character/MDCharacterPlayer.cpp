@@ -28,14 +28,8 @@ AMDCharacterPlayer::AMDCharacterPlayer()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 	
-	PrimaryActorTick.bCanEverTick = true;
-	PrimaryActorTick.bStartWithTickEnabled = true;
-
-	/*static ConstructorHelpers::FObjectFinder<UInputAction> InputActionMouseMoveRef(TEXT("/Script/EnhancedInput.InputAction'/Game/MakeDungeon/Input/Actions/IA_SetDestination_Click.IA_SetDestination_Click'"));
-	if (nullptr != InputActionMouseMoveRef.Object)
-	{
-		MouseMoveAction = InputActionMouseMoveRef.Object;
-	}*/
+	//PrimaryActorTick.bCanEverTick = true;
+	//PrimaryActorTick.bStartWithTickEnabled = true;
 
 	static ConstructorHelpers::FObjectFinder<UInputAction> InputActionKeyboardMoveRef(TEXT("/Script/EnhancedInput.InputAction'/Game/MakeDungeon/Input/Actions/IA_KeyboardMove.IA_KeyboardMove'"));
 	if (nullptr != InputActionKeyboardMoveRef.Object)
@@ -86,36 +80,6 @@ void AMDCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 void AMDCharacterPlayer::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//SetCharacterControl();
-}
-
-void AMDCharacterPlayer::SetCharacterControl()
-{
-	SetCharacterControlData(CharacterControl);
-
-	/*APlayerController* PlayerController = CastChecked<APlayerController>(GetController());
-	if (UEnhancedInputLocalPlayerSubsystem* SubSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-	{
-		SubSystem->ClearAllMappings();
-		UInputMappingContext* NewMappingContext = CharacterControl->InputMappingContext;
-		if (NewMappingContext)
-		{
-			SubSystem->AddMappingContext(NewMappingContext, 0);
-		}
-	}*/
-}
-
-void AMDCharacterPlayer::SetCharacterControlData(const UMDCharacterControlData* CharacterControlData)
-{
-	// Camera
-	CameraBoom->TargetArmLength = CharacterControlData->TargetArmLength;
-	CameraBoom->SetRelativeRotation(CharacterControlData->RelativeRotation);
-	CameraBoom->bUsePawnControlRotation = CharacterControlData->bUsePawnControlRotation;
-	CameraBoom->bInheritPitch = CharacterControlData->bInheritPitch;
-	CameraBoom->bInheritYaw = CharacterControlData->bInheritYaw;
-	CameraBoom->bInheritRoll = CharacterControlData->bInheritRoll;
-	CameraBoom->bDoCollisionTest = CharacterControlData->bDoCollisionTest;
 }
 
 void AMDCharacterPlayer::SetupGASInputComponent()

@@ -6,17 +6,15 @@
 
 AMDGameMode::AMDGameMode()
 {
-	/*PlayerControllerClass = AMDPlayerController::StaticClass();
-
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/TopDown/Blueprints/BP_TopDownCharacter"));
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/MakeDungeon/Blueprints/BP_MDCharacterPlayer.BP_MDCharacterPlayer_C"));
 	if (PlayerPawnBPClass.Class != nullptr)
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
 
-	static ConstructorHelpers::FClassFinder<APlayerController> PlayerControllerBPClass(TEXT("/Game/TopDown/Blueprints/BP_TopDownPlayerController"));
+	static ConstructorHelpers::FClassFinder<APlayerController> PlayerControllerBPClass(TEXT("/Game/MakeDungeon/Blueprints/BP_MDPlayerController.BP_MDPlayerController_C"));
 	if (PlayerControllerBPClass.Class != NULL)
 	{
 		PlayerControllerClass = PlayerControllerBPClass.Class;
-	}*/
+	}
 }

@@ -18,8 +18,6 @@ class MAKEDUNGEON_API AMDCharacterPlayer : public AMDCharacterBase
 public:
 	AMDCharacterPlayer();
 
-
-
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -28,9 +26,6 @@ protected:
 
 // Character Control Section
 protected:
-	void SetCharacterControl();
-	virtual void SetCharacterControlData(const class UMDCharacterControlData* CharacterControlData) override;
-
 	void SetupGASInputComponent();
 	void GASInputPressed(int32 InputId);
 	void GASInputReleased(int32 InputId);
@@ -46,9 +41,6 @@ protected:
 
 // Input Section
 protected:
-	/*UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputAction> MouseMoveAction;*/
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> KeyboardMoveAction;
 

@@ -24,12 +24,6 @@ AMDCharacterBase::AMDCharacterBase()
 	// Movement
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 640.f, 0.f);
-	//GetCharacterMovement()->JumpZVelocity = 700.f;
-	//GetCharacterMovement()->AirControl = 0.35f;
-	//GetCharacterMovement()->MaxWalkSpeed = 500.f;
-	//GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
-	//GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
-
 	GetCharacterMovement()->bConstrainToPlane = true;
 	GetCharacterMovement()->bSnapToPlaneAtStart = true;
 
@@ -56,15 +50,3 @@ UAbilitySystemComponent* AMDCharacterBase::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
 }
-
-void AMDCharacterBase::SetCharacterControlData(const UMDCharacterControlData* CharacterControlData)
-{
-	// Pawn
-	bUseControllerRotationYaw = CharacterControlData->bUseControllerRotationYaw;
-
-	// CharacterMovement
-	GetCharacterMovement()->bOrientRotationToMovement = CharacterControlData->bOrientRotationToMovement;
-	GetCharacterMovement()->bUseControllerDesiredRotation = CharacterControlData->bUseControllerDesiredRotation;
-	GetCharacterMovement()->RotationRate = CharacterControlData->RotationRate;
-}
-
