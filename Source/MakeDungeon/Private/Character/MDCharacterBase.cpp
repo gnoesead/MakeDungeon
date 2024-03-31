@@ -23,19 +23,16 @@ AMDCharacterBase::AMDCharacterBase()
 
 	// Movement
 	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->RotationRate = FRotator(0.f, 500.f, 0.f);
-	GetCharacterMovement()->JumpZVelocity = 700.f;
-	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 500.f;
-	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
-	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 640.f, 0.f);
+	GetCharacterMovement()->bConstrainToPlane = true;
+	GetCharacterMovement()->bSnapToPlaneAtStart = true;
 
 	// Mesh
 	GetMesh()->SetRelativeLocationAndRotation(FVector(0.f, 0.f, -100.f), FRotator(0.f, -90.f, 0.f));
 	GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
 	GetMesh()->SetCollisionProfileName(TEXT("CharacterMesh"));
 
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> CharacterMeshRef(TEXT("/Script/Engine.SkeletalMesh'/Game/Characters/Mannequins/Meshes/SKM_Quinn_Simple.SKM_Quinn_Simple'"));
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> CharacterMeshRef(TEXT("/Script/Engine.SkeletalMesh'/Game/Characters/Mannequins/Meshes/SKM_Quinn.SKM_Quinn'"));
 	if (CharacterMeshRef.Object)
 	{
 		GetMesh()->SetSkeletalMesh(CharacterMeshRef.Object);
@@ -47,28 +44,9 @@ AMDCharacterBase::AMDCharacterBase()
 		GetMesh()->SetAnimInstanceClass(AnimInstanceClassRef.Class);
 	}
 
-	static ConstructorHelpers::FObjectFinder<UMDCharacterControlData> CharacterControlDataRef(TEXT("/Script/MakeDungeon.MDCharacterControlData'/Game/MakeDungeon/Data/MDC_Player.MDC_Player'"));
-	if (CharacterControlDataRef.Object)
-	{
-		CharacterControl = CharacterControlDataRef.Object;
-	}
-
-
 }
 
 UAbilitySystemComponent* AMDCharacterBase::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
 }
-
-void AMDCharacterBase::SetCharacterControlData(const UMDCharacterControlData* CharacterControlData)
-{
-	// Pawn
-	bUseControllerRotationYaw = CharacterControlData->bUseControllerRotationYaw;
-
-	// CharacterMovement
-	GetCharacterMovement()->bOrientRotationToMovement = CharacterControlData->bOrientRotationToMovement;
-	GetCharacterMovement()->bUseControllerDesiredRotation = CharacterControlData->bUseControllerDesiredRotation;
-	GetCharacterMovement()->RotationRate = CharacterControlData->RotationRate;
-}
-
