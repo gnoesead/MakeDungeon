@@ -31,6 +31,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> MouseMoveAction;
 protected:
+	uint32 bMoveToMouseCursor : 1;
+
 	virtual void SetupInputComponent() override;
 
 	void OnMouseMoveTriggered();

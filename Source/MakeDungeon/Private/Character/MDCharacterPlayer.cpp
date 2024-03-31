@@ -19,13 +19,18 @@ AMDCharacterPlayer::AMDCharacterPlayer()
 	// Camera
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 400.f;
-	CameraBoom->bUsePawnControlRotation = true;
+	CameraBoom->SetUsingAbsoluteRotation(true);
+	CameraBoom->TargetArmLength = 800.f;
+	CameraBoom->SetRelativeRotation(FRotator(-60.f, 0.f, 0.f));
+	CameraBoom->bDoCollisionTest = true;
 
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 	
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = true;
+
 	/*static ConstructorHelpers::FObjectFinder<UInputAction> InputActionMouseMoveRef(TEXT("/Script/EnhancedInput.InputAction'/Game/MakeDungeon/Input/Actions/IA_SetDestination_Click.IA_SetDestination_Click'"));
 	if (nullptr != InputActionMouseMoveRef.Object)
 	{
@@ -60,8 +65,8 @@ void AMDCharacterPlayer::PossessedBy(AController* NewController)
 
 		//SetupGASInputComponent();
 
-		APlayerController* PlayerController = CastChecked<APlayerController>(NewController);
-		PlayerController->ConsoleCommand(TEXT("showdebug abilitysystem"));
+		/*APlayerController* PlayerController = CastChecked<APlayerController>(NewController);
+		PlayerController->ConsoleCommand(TEXT("showdebug abilitysystem"));*/
 	}
 
 }
@@ -82,7 +87,7 @@ void AMDCharacterPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SetCharacterControl();
+	//SetCharacterControl();
 }
 
 void AMDCharacterPlayer::SetCharacterControl()
