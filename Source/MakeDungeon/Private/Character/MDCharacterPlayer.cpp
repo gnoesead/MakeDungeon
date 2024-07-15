@@ -3,18 +3,32 @@
 
 #include "Character/MDCharacterPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Data/MDCharacterControlData.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Player/MDPlayerState.h"
 #include "AbilitySystemComponent.h"
+#include "Item/MDWeaponBase.h"
+#include "Tags/MDGameplayTag.h"
+#include "Player/MDPlayerController.h"
+#include "Character/Abilities/AttributeSets/MDCharacterAttributeSet.h"
+#include "UI/MDWidgetComponent.h"
+#include "UI/MDCharacterStatWidget.h"
+#include "UI/MDPierceCountWidget.h"
+#include "Interface/MDGameInterface.h"
+#include "Game/MDGameMode.h"
 #include "../MakeDungeon.h"
 
 AMDCharacterPlayer::AMDCharacterPlayer()
 {
-	AbilitySystemComponent = nullptr;
+	ASC = nullptr;
+	AttributeSet = nullptr;
+
+	// Mesh
+	GetMesh()->SetRelativeLocationAndRotation(FVector(0.f, 0.f, -100.f), FRotator(0.f, -90.f, 0.f));
+	GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+	GetMesh()->SetCollisionProfileName(TEXT("CharacterMesh"));
 
 	// Camera
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -28,14 +42,25 @@ AMDCharacterPlayer::AMDCharacterPlayer()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 	
+	PierceCount = CreateDefaultSubobject<UMDWidgetComponent>(TEXT("PierceCount"));
+	PierceCount->SetupAttachment(GetMesh());
+	PierceCount->SetRelativeLocation(FVector(0.f, 0.f, 280.f));
+	static ConstructorHelpers::FClassFinder<UMDPierceCountWidget> PierceCountWidgetRef(TEXT("/Game/MakeDungeon/UI/WBP_Pierce.WBP_Pierce_C"));
+	if (PierceCountWidgetRef.Class)
+	{
+		PierceCount->SetWidgetClass(PierceCountWidgetRef.Class);
+		PierceCount->SetWidgetSpace(EWidgetSpace::Screen);
+		PierceCount->SetDrawSize(FVector2D(50.f, 50.f));
+		PierceCount->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		PierceCount->CanCharacterStepUpOn = ECanBeCharacterBase::ECB_No;
+		PierceCount->SetHiddenInGame(true);
+	}
+
+
+	DeathCount = 3;
+
 	//PrimaryActorTick.bCanEverTick = true;
 	//PrimaryActorTick.bStartWithTickEnabled = true;
-
-	static ConstructorHelpers::FObjectFinder<UInputAction> InputActionKeyboardMoveRef(TEXT("/Script/EnhancedInput.InputAction'/Game/MakeDungeon/Input/Actions/IA_KeyboardMove.IA_KeyboardMove'"));
-	if (nullptr != InputActionKeyboardMoveRef.Object)
-	{
-		KeyboardMoveAction = InputActionKeyboardMoveRef.Object;
-	}
 }
 
 void AMDCharacterPlayer::PossessedBy(AController* NewController)
@@ -45,111 +70,189 @@ void AMDCharacterPlayer::PossessedBy(AController* NewController)
 	AMDPlayerState* PS = GetPlayerState<AMDPlayerState>();
 	if (PS)
 	{
-		AbilitySystemComponent = PS->GetAbilitySystemComponent();
-		AbilitySystemComponent->InitAbilityActorInfo(PS, this);
+		ASC = PS->GetAbilitySystemComponent();
+		AttributeSet = PS->GetAttributeSet();
+		ASC->InitAbilityActorInfo(PS, this);
+		AttributeSet->OnOutOfHealth.AddDynamic(this, &ThisClass::OnOutOfHealth);
+		
+		for (const auto& StartAbility : CharacterAbilities)
+		{
+			FGameplayAbilitySpec StartSpec(StartAbility);
+			ASC->GiveAbility(StartSpec);
+		}
 
 		for (const auto& StartInputAbility : InputAbilities)
 		{
 			FGameplayAbilitySpec StartSpec(StartInputAbility.Value);
-			StartSpec.InputID = StartInputAbility.Key;
-			AbilitySystemComponent->GiveAbility(StartSpec);
-
-			MD_LOG(LogMD, Log, TEXT("%d, %s"), StartInputAbility.Key, *(StartInputAbility.Value)->GetAuthoredName());
+			ASC->GiveAbility(StartSpec);
 		}
-
-		//SetupGASInputComponent();
-
-		/*APlayerController* PlayerController = CastChecked<APlayerController>(NewController);
-		PlayerController->ConsoleCommand(TEXT("showdebug abilitysystem"));*/
+	
+		APlayerController* PlayerController = CastChecked<APlayerController>(NewController);
+		//PlayerController->ConsoleCommand(TEXT("showdebug abilitysystem"));
 	}
-
-}
-
-void AMDCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
-
-	//EnhancedInputComponent->BindAction(MouseMoveAction, ETriggerEvent::Triggered, this, &AMDCharacterPlayer::MouseMove);
-	EnhancedInputComponent->BindAction(KeyboardMoveAction, ETriggerEvent::Triggered, this, &AMDCharacterPlayer::KeyboardMove);
-
-	//SetupGASInputComponent();
 }
 
 void AMDCharacterPlayer::BeginPlay()
 {
 	Super::BeginPlay();
+
+	EquipWeapon(MDTAG_WEAPON_TWOHANDEDSWORD);
 }
 
-void AMDCharacterPlayer::SetupGASInputComponent()
+FVector AMDCharacterPlayer::GetAttackLocation() const
 {
-	if (IsValid(AbilitySystemComponent) && IsValid(InputComponent))
-	{
-		UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent);
+	FHitResult HitResult;
+	APlayerController* PlayerController = CastChecked<APlayerController>(GetController());
+	PlayerController->GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, HitResult);
 
-		//EnhancedInputComponent->BindAction(MouseMoveAction, ETriggerEvent::Triggered, this, &AMDCharacterPlayer::GASInputPressed, 0);
-		//EnhancedInputComponent->BindAction(MouseMoveAction, ETriggerEvent::Canceled, this, &AMDCharacterPlayer::GASInputReleased, 0);
-		//EnhancedInputComponent->BindAction(MouseMoveAction, ETriggerEvent::Completed, this, &AMDCharacterPlayer::GASInputReleased, 0);
-		//EnhancedInputComponent->BindAction(KeyboardMoveAction, ETriggerEvent::Triggered, this, &AMDCharacterPlayer::KeyboardMove);
-
-		MD_LOG(LogMD, Log, TEXT("Begin"));
-	}
+	return HitResult.Location;
 }
 
-void AMDCharacterPlayer::GASInputPressed(int32 InputId)
+FRotator AMDCharacterPlayer::GetAttackDirection(bool GetCursorDirection) const
 {
-	FGameplayAbilitySpec* Spec = AbilitySystemComponent->FindAbilitySpecFromInputID(InputId);
-	if (Spec)
+	FRotator ResultRotator;
+
+	if (IsTrackingTarget() || GetCursorDirection)
 	{
-		Spec->InputPressed = true;
-		if (Spec->IsActive())
-		{
-			AbilitySystemComponent->AbilitySpecInputPressed(*Spec);
+		FHitResult HitResult;
+		APlayerController* PlayerController = CastChecked<APlayerController>(GetController());
+		PlayerController->GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, HitResult);
+		FVector MouseLocation = HitResult.Location;
+		FVector StartPoint = GetActorLocation();
 
-			MD_LOG(LogMD, Log, TEXT("GASInputPressed_IsActive"));
-		}
-		else
-		{
-			AbilitySystemComponent->TryActivateAbility(Spec->Handle);
-			MD_LOG(LogMD, Log, TEXT("GASInputPressed_IsNotActive"));
-		}
-	}
-}
+		MouseLocation.Z = StartPoint.Z;
 
-void AMDCharacterPlayer::GASInputReleased(int32 InputId)
-{
-	FGameplayAbilitySpec* Spec = AbilitySystemComponent->FindAbilitySpecFromInputID(InputId);
-	if (Spec)
-	{
-		Spec->InputPressed = false;
-		if (Spec->IsActive())
-		{
-			AbilitySystemComponent->AbilitySpecInputReleased(*Spec);
-
-			MD_LOG(LogMD, Log, TEXT("GASInputReleased_IsActive"));
-		}
-	}
-}
-
-void AMDCharacterPlayer::KeyboardMove(const FInputActionValue& Value)
-{
-	FVector2D MovementVector = Value.Get<FVector2D>();
-
-	float InputSizeSquared = MovementVector.SquaredLength();
-	float MovementVectorSize = 1.f;
-	float MovementVectorSizeSquared = MovementVector.SquaredLength();
-	if (MovementVectorSizeSquared > 1.f)
-	{
-		MovementVector.Normalize();
-		MovementVectorSizeSquared = 1.f;
+		ResultRotator = FRotationMatrix::MakeFromX(MouseLocation - StartPoint).Rotator();
 	}
 	else
 	{
-		MovementVectorSize = FMath::Sqrt(MovementVectorSizeSquared);
+		ResultRotator = Super::GetAttackDirection(GetCursorDirection);
 	}
 
-	FVector MoveDirection = FVector(MovementVector.X, MovementVector.Y, 0.f);
-	GetController()->SetControlRotation(FRotationMatrix::MakeFromX(MoveDirection).Rotator());
-	AddMovementInput(MoveDirection, MovementVectorSize);
+	return ResultRotator;
+}
+
+void AMDCharacterPlayer::SetCurrentWeapon(const FGameplayTag& Tag)
+{
+	if (CurrentWeapon != Tag)
+	{
+		CurrentWeapon = Tag;
+		OnGameplayTagChanged.Broadcast();
+	}
+}
+
+void AMDCharacterPlayer::StopMovement()
+{
+	GetController()->StopMovement();
+}
+
+void AMDCharacterPlayer::SwapWeapon(FGameplayTag Tag, UEnhancedInputLocalPlayerSubsystem* SubSystem)
+{
+	if (Tag != CurrentWeapon)
+	{
+		if (!ASC->HasAllMatchingGameplayTags(MDTAG_WEAPON_ATTACK.GetSingleTagContainer()))
+		{
+			UMDWeaponBase* Weapon = Weapons.Find(Tag)->Get();
+			if (Weapon)
+			{
+				FGameplayTagContainer CurrentOwnedTags;
+				ASC->GetOwnedGameplayTags(CurrentOwnedTags);
+
+				if (CurrentOwnedTags.HasTag(CurrentWeapon))
+				{
+					ASC->RemoveLooseGameplayTag(CurrentWeapon);
+				}
+
+				SubSystem->RemoveMappingContext(Weapons[CurrentWeapon]->GetMappingContext());
+				Weapons[CurrentWeapon]->SetHiddenInGame(true);
+				//Off Current
+
+				SetCurrentWeapon(Tag);
+
+				//On New
+				SubSystem->AddMappingContext(Weapons[CurrentWeapon]->GetMappingContext(), 1);
+				ASC->AddLooseGameplayTag(CurrentWeapon);
+				Weapons[CurrentWeapon]->SetHiddenInGame(false);
+			}
+			else
+			{
+				MD_LOG(LogMD, Error, TEXT("No Weapon"));
+			}
+		}
+	}
+}
+
+void AMDCharacterPlayer::SetPierceCount(int32 Value)
+{
+	UMDPierceCountWidget* PierceCountWidget = Cast<UMDPierceCountWidget>(PierceCount->GetWidget());
+	if (PierceCountWidget)
+	{
+		PierceCountWidget->SetCount(Value);
+	}
+}
+
+void AMDCharacterPlayer::SetVisiblePierceCount(bool IsVisible)
+{
+	PierceCount->SetHiddenInGame(!IsVisible);
+}
+
+void AMDCharacterPlayer::SetDead()
+{
+	Super::SetDead();
+
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		PlayerController->DisableInput(PlayerController);
+
+		--DeathCount;
+		if(0 >= DeathCount)
+		{
+			IMDGameInterface* MDGamemode = Cast<IMDGameInterface>(GetWorld()->GetAuthGameMode());
+			if (MDGamemode)
+			{
+				MDGamemode->OnPlayerDead();
+			}
+		}
+		else
+		{
+			FTimerHandle DeadTimerHandle;
+			GetWorld()->GetTimerManager().SetTimer(DeadTimerHandle, FTimerDelegate::CreateLambda(
+				[&, PlayerController]()
+				{
+					PlayerController->EnableInput(PlayerController);
+					GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+					SetActorEnableCollision(true);
+					StatusBar->SetHiddenInGame(false);
+					AttributeSet->Revive();
+				}
+			), 5.f, false);
+		}
+	}
+}
+
+void AMDCharacterPlayer::OnOutOfHealth()
+{
+	Super::OnOutOfHealth();
+}
+
+void AMDCharacterPlayer::EquipWeapon(FGameplayTag Tag)
+{
+	APlayerController* PlayerController = CastChecked<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer();
+		if (LocalPlayer)
+		{
+			UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer);
+			if (Subsystem)
+			{
+				Subsystem->AddMappingContext(Weapons[CurrentWeapon]->GetMappingContext(), 1);
+				ASC->AddLooseGameplayTag(CurrentWeapon);
+				Weapons[CurrentWeapon]->SetHiddenInGame(false);
+
+				OnGameplayTagChanged.Broadcast();
+			}
+		}
+	}
 }

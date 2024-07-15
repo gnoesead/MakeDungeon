@@ -4,8 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "MDCharacterBase.h"
-#include "InputActionValue.h"
+#include "Abilities/GameplayAbilityTypes.h"
 #include "MDCharacterPlayer.generated.h"
+
+DECLARE_MULTICAST_DELEGATE(FOnGameplayTagChanged);
+
+class USpringArmComponent;
+class UEnhancedInputLocalPlayerSubsystem;
 
 /**
  * 
@@ -19,37 +24,48 @@ public:
 	AMDCharacterPlayer();
 
 	virtual void PossessedBy(AController* NewController) override;
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-protected:
 	virtual void BeginPlay() override;
 
-// Character Control Section
+	virtual FVector GetAttackLocation() const override;
+	virtual FRotator GetAttackDirection(bool GetCursorDirection = false) const override;
+
+	USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+
+	void SetCurrentWeapon(const FGameplayTag& Tag);
+
+	virtual void StopMovement() override;
+
+	void SwapWeapon(FGameplayTag Tag, UEnhancedInputLocalPlayerSubsystem* SubSystem);
+
+	void SetPierceCount(int32 Value);
+	void SetVisiblePierceCount(bool IsVisible);
+
 protected:
-	void SetupGASInputComponent();
-	void GASInputPressed(int32 InputId);
-	void GASInputReleased(int32 InputId);
-	
+	virtual void SetDead() override;
+
+	virtual void OnOutOfHealth() override;
+
+	//Temp
+	void EquipWeapon(FGameplayTag Tag);
+
+public:
+	FOnGameplayTagChanged OnGameplayTagChanged;
 
 // Camera Section
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class USpringArmComponent> CameraBoom;
+	TObjectPtr<USpringArmComponent> CameraBoom;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UCameraComponent> FollowCamera;
 
 // Input Section
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputAction> KeyboardMoveAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputAction> JumpAction;
-
-	void KeyboardMove(const FInputActionValue& Value);
-	
-protected:
 	UPROPERTY(EditAnywhere, Category = "GAS")
-	TMap<int32, TSubclassOf<class UGameplayAbility>> InputAbilities;
+	TMap<FGameplayTag, TSubclassOf<UGameplayAbility>> InputAbilities;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UMDWidgetComponent> PierceCount;
+
+private:
+	int32 DeathCount;
 };
